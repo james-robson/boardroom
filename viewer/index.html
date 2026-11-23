@@ -65,7 +65,8 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .card .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
 .round-h{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px;display:flex;align-items:center;gap:8px}
 .round-h::after{content:"";flex:1;border-top:1px solid var(--line)}
-.msg{border-left:3px solid var(--c);padding:4px 0 4px 10px;margin:6px 0;animation:in .35s ease-out}
+.msg{border-left:3px solid var(--c);padding:4px 0 4px 10px;margin:6px 0}
+.new{animation:in .35s ease-out}
 .msg .from{font-weight:600;color:var(--c);font-size:12px}
 .msg.block{border-left-color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,transparent);border-radius:0 6px 6px 0}
 .msg.block .from::after{content:" · BLOCK";color:var(--bad)}
@@ -82,7 +83,7 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .decisions .doc{font-size:11px;color:var(--muted);margin-top:6px;font-family:ui-monospace,Menlo,monospace}
 
 /* feed */
-.ev{display:grid;grid-template-columns:42px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;animation:in .35s ease-out}
+.ev{display:grid;grid-template-columns:42px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
 .ev:last-child{border-bottom:0}
 .ev time{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
 .ev .sub{font-size:12px;color:var(--muted);margin-top:2px;white-space:pre-wrap}
@@ -125,6 +126,7 @@ let all = [];        // every event loaded
 let shown = 0;       // how many are revealed (demo replays progressively)
 let picked = null;   // meeting tab the user clicked; null = follow latest
 let timer = null;
+let drawn = 0;       // events already drawn once (only newer ones animate in)
 
 const $ = id => document.getElementById(id);
 function el(tag, attrs = {}, ...kids) {
@@ -277,7 +279,7 @@ function render() {
     let r = null;
     for (const x of m.msgs) {
       if (x.round && x.round !== r) { r = x.round; body.push(el('div', {class:'round-h'}, `Round ${r}`)); }
-      body.push(el('div', {class:`msg ${x.type}`, style:`--c:${colorOf(s, x.who)}`},
+      body.push(el('div', {class:`msg ${x.type}${x._i >= drawn ? ' new' : ''}`, style:`--c:${colorOf(s, x.who)}`},
         el('div', {class:'from'}, label(s, x.who)), x.text));
     }
     if (m.live) {
@@ -298,16 +300,23 @@ function render() {
 
   // feed (newest first)
   const feed = s.feed.slice().reverse().map(([e, k, sub, kind]) =>
-    el('div', {class:`ev ${kind || ''}`}, el('time', {}, hhmm(e.t)),
+    el('div', {class:`ev ${kind || ''}${e._i >= drawn ? ' new' : ''}`}, el('time', {}, hhmm(e.t)),
       el('div', {}, el('div', {class:'k'}, k), sub ? el('div', {class:'sub'}, sub) : null)));
   $('feed').replaceChildren(...(feed.length ? feed : [el('div', {class:'empty'}, 'Nothing yet.')]));
+  drawn = shown;   // items up to here have had their entrance animation
 }
 
+let lastText = null;
 async function load() {
   try {
     const res = await fetch(SRC, {cache:'no-store'});
     if (!res.ok) throw new Error(res.status);
-    return parse(await res.text());
+    const text = await res.text();
+    if (text === lastText) return 'unchanged';
+    lastText = text;
+    const events = parse(text);
+    events.forEach((e, i) => { e._i = i; });
+    return events;
   } catch (err) {
     $('banner').hidden = false;
     $('banner').textContent = `Can't read ${SRC} yet (${err.message}). Waiting for the work-day to start…`;
@@ -318,8 +327,10 @@ async function load() {
 async function startDemo() {
   $('banner').hidden = false;
   $('banner').textContent = 'Sample replay: invented data showing what a work-day looks like, not a real day. Open ?day=YYYY-MM-DD for a real one.';
-  all = (await load()) || [];
-  shown = 0; picked = null;
+  lastText = null;
+  const ev = await load();
+  all = Array.isArray(ev) ? ev : [];
+  shown = 0; picked = null; drawn = 0;
   clearInterval(timer);
   timer = setInterval(() => { if (shown < all.length) { shown++; render(); } else clearInterval(timer); }, STEP_MS);
   render();
@@ -327,7 +338,8 @@ async function startDemo() {
 
 async function poll() {
   const ev = await load();
-  if (ev) { $('banner').hidden = true; all = ev; shown = ev.length; render(); }
+  // only redraw when the file changed, so text doesn't flash while you read
+  if (ev && ev !== 'unchanged') { $('banner').hidden = true; all = ev; shown = ev.length; render(); }
   setTimeout(poll, 2000);
 }
 
