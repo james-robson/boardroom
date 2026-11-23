@@ -1,6 +1,7 @@
 Rules for leads (the secretary fills in the paths):
 
 - Read your brief (BRIEF) and the board brief (BOARD). The board brief's constraints override everything else.
+- Never print a secret: don't show the values of `.env` files, environment variables, connection strings, keys or passwords in any command output. To check one, print only the non-secret parts (host, port, database name) or whether it's set.
 - You're in your own worktree. Work on a branch named `boardroom/<day>/<your role>`. Open a PR only if your brief asks for one. Never merge.
 - You may delegate to your seniors and juniors by spawning them by agent name. Give each one a written objective, definition of done, output and boundaries.
 - You may hire within the limits (up to 2 seniors under you, up to 2 juniors per senior). To hire, write PROJECT/.claude/agents/<role>.md from TEMPLATES/agents/hire.md, add a row to ORG, and log a `hire` event.

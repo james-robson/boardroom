@@ -201,6 +201,8 @@ function build(events) {
         s.feed.push([e, 'Board answered', e.answer]);
         break;
       }
+      case 'board_directive': s.feed.push([e, `Board asks ${label(s, e.to)}`, e.text, 'board']); break;
+      case 'directive_answer': s.feed.push([e, `${label(s, e.who)} answered the board`, e.text, 'board']); break;
       case 'retro': s.feed.push([e, `${label(s, e.who)} filed a retro`, e.text]); break;
       case 'board_report': s.report = e; s.feed.push([e, 'Board report ready', e.text, 'board']); break;
     }

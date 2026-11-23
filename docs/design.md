@@ -82,7 +82,7 @@ The skill runs in the main session as the **secretary**. It spawns every agent, 
 
 1. **Prepare.** Check that `.boardroom/board.md` exists; if not, create it from the template and stop so the board can fill it in. Create the other state files and the execs if missing. Read yesterday's board report and the board's answers.
 2. **Morning C-suite meeting.** Independent positions first (written in parallel, without seeing each other), then up to **10 rounds**.
-   - Each round all execs reply in parallel: one contribution each, `PASS`, a `BLOCK:` or `LIFT:` from the CSO, or `CLOSE:` from the CEO.
+   - Each round the CEO and CTO reply in parallel, then the CSO replies having seen their replies, so it never blocks a proposal that's already been dropped. A reply is one contribution, `PASS`, a `BLOCK:` or `LIFT:` from the CSO, or `CLOSE:` from the CEO.
    - The meeting ends on CLOSE with no active block, a round of all PASS, or after round 10.
    - The CEO writes the decision doc and one task brief per lead.
 3. **Staffing** within the limits.
@@ -93,6 +93,8 @@ The skill runs in the main session as the **secretary**. It spawns every agent, 
 5. **Mid-day approvals.** A lead that needs board approval stops and says so. The secretary asks the board and records the answer, and the lead resumes once if approved.
 6. **Retros.** Each lead writes one retro.
 7. **Evening C-suite meeting.** Same format. The CEO writes the board report.
+**At any point,** the board can send a directive to a named exec. The secretary logs it, has the exec answer between steps, and brings the answer straight to the board.
+
 8. **Close.** The secretary presents the report and asks each decision it needs, records the answers in `approvals.md`, and ends the day.
 
 ## Decision docs
@@ -127,6 +129,8 @@ Then open `http://127.0.0.1:8787/?day=YYYY-MM-DD`, or `http://127.0.0.1:8787/` f
 | `agent_end` | `who`, `status` (`done` / `blocked`), `turns`, `tokens`, `summary` |
 | `approval_request` | `id`, `who`, `text` |
 | `approval_answer` | `id`, `answer` |
+| `board_directive` | `id`, `to`, `text` (the board's words) |
+| `directive_answer` | `id`, `who`, `text` |
 | `retro` | `who`, `text` |
 | `board_report` | `path`, `text` |
 
