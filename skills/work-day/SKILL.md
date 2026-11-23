@@ -128,7 +128,7 @@ Each lead writes `DAY/retros/<lead>.md` before returning. If one is missing, re-
 
 ## 6. Evening meeting (`pm`, "Evening C-suite")
 
-Agenda: today's decision doc, the retros, PRs opened today, and approvals asked and answered. Run the meeting as above. Then the CEO writes `DAY/board-report.md` from `SKILL/templates/board-report.md`. Fill in its cost table yourself from the `agent_end` events. Log `board_report path=<path> text="<the summary section>"`.
+Agenda: today's decision doc, the retros, PRs opened today, and approvals asked and answered. Run the meeting as above. Then the CEO writes `DAY/board-report.md` from `SKILL/templates/board-report.md`. Fill in its cost table yourself from the `agent_end` events. Then render a readable copy beside it with `python3 SKILL/scripts/render_report.py DAY/board-report.md` (writes `DAY/board-report.html`; re-run it if the report changes). Log `board_report path=<path> text="<the summary section>"`.
 
 ## 7. Close
 

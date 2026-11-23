@@ -28,6 +28,8 @@ h1{font-size:16px;margin:0;letter-spacing:-.01em}
 .stats b{color:var(--ink);font-variant-numeric:tabular-nums}
 button{font:inherit;font-size:12px;background:none;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 9px;cursor:pointer}
 button:hover{border-color:var(--muted)}
+[hidden]{display:none!important}
+select{font:inherit;font-size:12px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
 .banner{background:color-mix(in srgb,var(--warn) 22%,var(--panel));padding:5px 16px;font-size:12px;border-bottom:1px solid var(--line)}
 main{flex:1;min-height:0;display:grid;grid-template-columns:290px 1fr 330px;gap:12px;padding:12px}
 section{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;padding:12px 14px;min-height:0}
@@ -99,6 +101,9 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
   <h1>Boardroom</h1>
   <span class="pill" id="status">idle</span>
   <span class="pill" id="day"></span>
+  <select id="daypick" aria-label="Work-day" hidden></select>
+  <button id="today" hidden>Today</button>
+  <a class="pill" id="report-link" target="_blank" rel="noopener" hidden>Board report</a>
   <button id="restart" hidden>Replay</button>
   <div class="stats">
     <span>working <b id="s-working">0</b></span>
@@ -117,6 +122,33 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 const params = new URLSearchParams(location.search);
 const DAY = params.get('day');
 const DEMO = !DAY;
+
+// day list + Today jump (serve.py lists <project>/.boardroom/days/ at /days.json)
+(async () => {
+  let days = [];
+  try { days = await (await fetch('/days.json', {cache: 'no-store'})).json(); }
+  catch {
+    // older serve.py: read the /days/ folder listing instead
+    try {
+      const page = await (await fetch('/days/', {cache: 'no-store'})).text();
+      days = [...new Set([...page.matchAll(/href="(\d{4}-\d{2}-\d{2})\/"/g)].map(m => m[1]))].sort().reverse();
+    } catch { return; }
+  }
+  if (!days.length) return;
+  const pick = $('daypick'), today = $('today');
+  const now = new Date(), iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const todayDay = iso(now);
+  const go = d => { location.search = d ? `?day=${encodeURIComponent(d)}` : ''; };
+  pick.append(...(DEMO ? [el('option', {value: ''}, 'sample day')] : []), ...days.map(d => el('option', {value: d}, d === todayDay ? `${d} (today)` : d)));
+  pick.value = DEMO ? '' : DAY;
+  pick.onchange = () => go(pick.value);
+  pick.hidden = false; $('day').hidden = true;
+  const target = days.includes(todayDay) ? todayDay : days[0];
+  today.textContent = days.includes(todayDay) ? 'Today' : 'Latest';
+  today.title = days.includes(todayDay) ? todayDay : `No work-day today; latest is ${days[0]}`;
+  today.hidden = DAY === target;
+  today.onclick = () => go(target);
+})();
 // serve.py maps /days/ to <project>/.boardroom/days/
 const SRC = DEMO ? 'demo/events.jsonl' : `/days/${encodeURIComponent(DAY)}/events.jsonl`;
 const EXEC_COLORS = {ceo:'--ceo', cto:'--cto', cso:'--cso'};
@@ -231,6 +263,9 @@ function render() {
   $('status').className = 'pill' + (isLive ? ' live' : '');
   $('day').textContent = DEMO ? 'sample day' : DAY;
   $('restart').hidden = !DEMO || replaying;
+  const rl = $('report-link');
+  rl.hidden = DEMO || !s.report;
+  if (!rl.hidden) rl.href = `days/${encodeURIComponent(DAY)}/board-report.html`;
   const working = [...s.agents.values()].filter(a => a.status === 'working').length
                 + (liveMeeting ? [...s.agents.values()].filter(a => a.reports_to === 'board').length : 0);
   $('s-working').textContent = working;
