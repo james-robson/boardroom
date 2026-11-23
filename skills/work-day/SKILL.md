@@ -33,7 +33,7 @@ Values that parse as JSON (numbers, lists) are stored as such; everything else i
 1. If `BR/board.md` is missing: copy `SKILL/templates/board.md` there, tell the board to fill it in, and **stop**. The board brief is the only source of project goals and constraints; never invent them.
 2. Create `BR/approvals.md` and `BR/org.md` from their templates if missing.
 3. For each exec in `ceo`, `cto`, `cso`: if `PROJECT/.claude/agents/<exec>.md` is missing, copy `SKILL/templates/agents/<exec>.md` there and add the exec to `org.md`.
-4. Create `DAY/`, `DAY/briefs/` and `DAY/retros/`. Log `day_start`.
+4. Create `DAY/` and `DAY/briefs/`. Log `day_start`.
 5. Log a `hire` event for every member of `org.md` (execs have `reports_to=board`), so the viewer shows the full org.
 6. Tell the board how to watch:
    `python3 VIEWER/serve.py PROJECT` then open `http://127.0.0.1:8787/?day=<day>`.
@@ -122,13 +122,20 @@ For each lead that returned `NEEDS APPROVAL: ...`:
 
 Anything that can wait goes in the board report instead.
 
-## 5. Retros
+## 5. Team retro
 
-Each lead writes `DAY/retros/<lead>.md` before returning. If one is missing, re-spawn that lead once and ask only for the retro. Log `retro who=<lead> text="<the Done and Requests lines>"`.
+Once every lead has returned, everyone below the C-suite who worked today (leads, seniors, juniors; take them from today's `hire` and `agent_start` events) writes **one** retro together, `DAY/team-retro.md`. The C-suite takes no part.
+
+1. Write `DAY/team-retro.md` from `SKILL/templates/retro.md`, with the date and the list of contributors.
+2. **Contributions.** Spawn every contributor **in parallel, in one message** (`subagent_type` = their role, or a general-purpose agent told to read `PROJECT/.claude/agents/<role>.md` first if the role isn't registered in this session). Each reads its own brief or manager's instructions and today's outputs in `DAY`, and replies in at most 120 words under the template's headings: done (with evidence), not done and why, what got in the way, learned, requests. Paste each reply into the file under `## Contributions`, headed by the role.
+3. **Response.** Spawn them all again in parallel. Each reads the whole file and replies with `AGREE` or one addition, correction or disagreement of at most 60 words, naming whose point it answers. Paste these under `## Responses`; leave out an AGREE.
+4. Gather every request from the contributions and responses into `## Requests` (who asked, what), without merging or reranking them. That is assembly, not a decision.
+
+Log `retro who=team text="<the Requests section>"` and an `agent_end` for each contributor call, as in step 3.
 
 ## 6. Evening meeting (`pm`, "Evening C-suite")
 
-Agenda: today's decision doc, the retros, PRs opened today, and approvals asked and answered. Run the meeting as above. Then the CEO writes `DAY/board-report.md` from `SKILL/templates/board-report.md`. Fill in its cost table yourself from the `agent_end` events. Then render a readable copy beside it with `python3 SKILL/scripts/render_report.py DAY/board-report.md` (writes `DAY/board-report.html`; re-run it if the report changes). Log `board_report path=<path> text="<the summary section>"`.
+Agenda: today's decision doc, the team retro, PRs opened today, and approvals asked and answered. Run the meeting as above. Then the CEO writes `DAY/board-report.md` from `SKILL/templates/board-report.md`. Fill in its cost table yourself from the `agent_end` events. Then render a readable copy beside it with `python3 SKILL/scripts/render_report.py DAY/board-report.md` (writes `DAY/board-report.html`; re-run it if the report changes). Log `board_report path=<path> text="<the summary section>"`.
 
 ## 7. Close
 

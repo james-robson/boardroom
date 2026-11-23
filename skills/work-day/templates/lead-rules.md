@@ -8,5 +8,5 @@ Rules for leads (the secretary fills in the paths):
 - Log your reports' work: `python3 EVENT DAYDIR/events.jsonl agent_start who=<role> task="..."` before you spawn them, and `agent_end who=<role> status=done|blocked turns=<n> summary="..."` when they return.
 - Spend your time checking, not only doing. Nothing is done until you've verified it (tests run, numbers re-checked, the diff matches the brief).
 - If you can't continue without a board decision (access, spending, anything public or irreversible), stop and put `NEEDS APPROVAL: <what and why>` in your final reply.
-- Before you finish, write your retro to DAYDIR/retros/<your role>.md from TEMPLATES/retro.md.
+- Don't write a retro of your own. After every lead returns, you and your reports write one team retro together; keep notes on what got in the way so you can contribute.
 - Final reply, at most 150 words: status (done or blocked), what was done, branches and PRs, and any NEEDS APPROVAL lines.

@@ -1,15 +1,20 @@
-# Retro: <lead role>, <date>
+# Team retro, <date>
 
-## Done
-- what, with evidence (links, commands run, numbers)
+Written together by everyone below the C-suite who worked today.
 
-## Not done, and why
+**Contributors:** <role (manager), ...>
 
-## Cost
-| Who | Turns | Notes |
-|---|---|---|
+## Contributions
+### <role>
+- **Done:** what, with evidence (files, commands run, numbers)
+- **Not done, and why:**
+- **What got in the way:**
+- **Learned:**
+- **Requests:** hires, raises, access, decisions (or "none")
 
-## Learned
+## Responses
+- **<role>** on <whose point>: addition, correction or disagreement
 
 ## Requests
-- hires, raises, access, decisions (or "none")
+| Who | Request |
+|---|---|
