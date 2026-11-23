@@ -1,0 +1,40 @@
+{"t":"2026-11-24T09:00:00Z","type":"day_start"}
+{"t":"2026-11-24T09:00:01Z","type":"hire","who":"ceo","title":"CEO","reports_to":"board","model":"opus","max_turns":30}
+{"t":"2026-11-24T09:00:01Z","type":"hire","who":"cto","title":"CTO","reports_to":"board","model":"opus","max_turns":30}
+{"t":"2026-11-24T09:00:01Z","type":"hire","who":"cso","title":"CSO","reports_to":"board","model":"opus","max_turns":30}
+{"t":"2026-11-24T09:01:00Z","type":"meeting_start","id":"am","title":"Morning C-suite","max_rounds":10}
+{"t":"2026-11-24T09:02:00Z","type":"position","meeting":"am","who":"ceo","text":"Growth stalled after launch. We need to know whether people stopped arriving or stopped posting before we change anything."}
+{"t":"2026-11-24T09:02:10Z","type":"position","meeting":"am","who":"cto","text":"There are data scripts in the repo already. Run them first, then see what they can't answer."}
+{"t":"2026-11-24T09:02:20Z","type":"position","meeting":"am","who":"cso","text":"Map the posting flow end to end. If posting is hard for an agent, it won't happen, whatever the traffic."}
+{"t":"2026-11-24T09:03:00Z","type":"say","meeting":"am","round":1,"who":"ceo","text":"Two tracks then: numbers (CTO) and the posting experience (CSO). Agreed?"}
+{"t":"2026-11-24T09:03:20Z","type":"say","meeting":"am","round":1,"who":"cto","text":"Agreed. I'll hire an engineering lead to inventory the scripts and run them."}
+{"t":"2026-11-24T09:03:40Z","type":"say","meeting":"am","round":1,"who":"cso","text":"I'll hire a research lead for the posting-flow review."}
+{"t":"2026-11-24T09:04:00Z","type":"say","meeting":"am","round":2,"who":"ceo","text":"Let's also have the engineering lead prototype a better posting prompt today, so we have something to ship."}
+{"t":"2026-11-24T09:04:20Z","type":"say","meeting":"am","round":2,"who":"cto","text":"I can fit that in alongside the data work."}
+{"t":"2026-11-24T09:04:40Z","type":"block","meeting":"am","who":"cso","text":"Blocking the prototype. We don't know yet that the prompt is the problem. Building before the numbers are in breaks the board's 'find out before building' rule."}
+{"t":"2026-11-24T09:05:00Z","type":"say","meeting":"am","round":3,"who":"ceo","text":"Fair. The prototype is dropped from today. Data and the flow review only."}
+{"t":"2026-11-24T09:05:10Z","type":"unblock","meeting":"am","round":3,"who":"cso","text":"Block lifted: the prototype is off today's plan."}
+{"t":"2026-11-24T09:05:20Z","type":"say","meeting":"am","round":3,"who":"cto","text":"No changes from me. Ready to close."}
+{"t":"2026-11-24T09:06:00Z","type":"meeting_end","meeting":"am","decisions":["CTO hires Engineering Lead: inventory and run the existing data scripts, report what they can't answer","CSO hires Research Lead: map the posting flow end to end and list the friction points","No product changes today (CSO block, accepted)"],"doc":"org/days/2026-11-24/am-meeting.md"}
+{"t":"2026-11-24T09:06:30Z","type":"hire","who":"eng-lead","title":"Engineering Lead","reports_to":"cto","model":"opus","max_turns":40}
+{"t":"2026-11-24T09:06:31Z","type":"hire","who":"research-lead","title":"Research Lead","reports_to":"cso","model":"opus","max_turns":40}
+{"t":"2026-11-24T09:07:00Z","type":"agent_start","who":"eng-lead","task":"Inventory the data scripts; plan what to run"}
+{"t":"2026-11-24T09:07:01Z","type":"agent_start","who":"research-lead","task":"Trace the post and correct flows through the code"}
+{"t":"2026-11-24T09:20:00Z","type":"hire","who":"data-senior","title":"Data Engineer (senior)","reports_to":"eng-lead","model":"sonnet","max_turns":30}
+{"t":"2026-11-24T09:20:30Z","type":"agent_start","who":"data-senior","task":"Run the post-volume and active-user scripts for the last 90 days"}
+{"t":"2026-11-24T10:05:00Z","type":"approval_request","id":"a1","who":"eng-lead","text":"The scripts can't see search queries that returned nothing. Read-only access to production logs (Railway) would answer it. Approve?"}
+{"t":"2026-11-24T10:40:00Z","type":"agent_end","who":"data-senior","status":"done","turns":18,"summary":"Weekly post and active-user counts written to the brief folder"}
+{"t":"2026-11-24T11:10:00Z","type":"agent_end","who":"research-lead","status":"done","turns":27,"summary":"Posting flow mapped, 4 friction points listed with code references"}
+{"t":"2026-11-24T11:30:00Z","type":"agent_end","who":"eng-lead","status":"blocked","turns":22,"summary":"Script findings verified; waiting on the board for log access"}
+{"t":"2026-11-24T11:35:00Z","type":"retro","who":"eng-lead","text":"Done: script inventory, 90-day counts (verified by re-running). Blocked: no view of empty searches without log access. Cost: 40 turns including the senior."}
+{"t":"2026-11-24T11:36:00Z","type":"retro","who":"research-lead","text":"Done: posting flow map. Learned: the friction points are guesses until we see real usage. Request: none."}
+{"t":"2026-11-24T11:40:00Z","type":"meeting_start","id":"pm","title":"Evening C-suite","max_rounds":10}
+{"t":"2026-11-24T11:41:00Z","type":"position","meeting":"pm","who":"ceo","text":"We have counts and a flow map but not the 'why'. Log access is the decision the board needs to make."}
+{"t":"2026-11-24T11:41:10Z","type":"position","meeting":"pm","who":"cto","text":"The scripts covered what they could. The next answer needs logs."}
+{"t":"2026-11-24T11:41:20Z","type":"position","meeting":"pm","who":"cso","text":"Don't act on the friction list until the logs confirm it."}
+{"t":"2026-11-24T11:42:00Z","type":"say","meeting":"pm","round":1,"who":"ceo","text":"Board report: one decision (log access), no org changes, and tomorrow's plan depends on the answer."}
+{"t":"2026-11-24T11:42:20Z","type":"say","meeting":"pm","round":1,"who":"cto","text":"Agreed. Keep the senior on for tomorrow; no new hires."}
+{"t":"2026-11-24T11:42:40Z","type":"say","meeting":"pm","round":1,"who":"cso","text":"Agreed. Nothing to block."}
+{"t":"2026-11-24T11:43:00Z","type":"meeting_end","meeting":"pm","decisions":["Ask the board for read-only log access","No org changes requested","Tomorrow: analyse logs if approved, otherwise extend the scripts"],"doc":"org/days/2026-11-24/pm-meeting.md"}
+{"t":"2026-11-24T11:44:00Z","type":"board_report","path":"org/days/2026-11-24/board-report.md","text":"SAMPLE: Counts and posting-flow map done. Decision needed: read-only production log access (recommended: yes). Cost: 67 worker turns, 0 PRs (research day)."}
+{"t":"2026-11-24T11:45:00Z","type":"day_end"}

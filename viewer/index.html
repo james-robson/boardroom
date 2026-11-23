@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boardroom</title>
+<style>
+:root{
+  --bg:#f5f4f0;--panel:#fff;--ink:#1d1d1f;--muted:#6b6b70;--line:#e4e2dc;
+  --ceo:#7a4fd1;--cto:#1f7a8c;--cso:#c2571a;--board:#444;
+  --ok:#2e8b57;--warn:#b8860b;--bad:#c0392b;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#121215;--panel:#1b1b1f;--ink:#ececf0;--muted:#9a9aa3;--line:#2d2d34;
+  --ceo:#a98bf0;--cto:#4fb3c6;--cso:#f08a4b;--board:#bbb;
+  --ok:#4cc38a;--warn:#e0b84a;--bad:#ef6b5e;
+}}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+h1{font-size:16px;margin:0;letter-spacing:-.01em}
+.pill{font-size:12px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.pill.live{color:var(--ok);border-color:var(--ok)}
+.pill.live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--ok);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.25}}
+.stats{margin-left:auto;display:flex;gap:18px;color:var(--muted);font-size:12px;flex-wrap:wrap}
+.stats b{color:var(--ink);font-variant-numeric:tabular-nums}
+button{font:inherit;font-size:12px;background:none;border:1px solid var(--line);color:var(--ink);border-radius:6px;padding:3px 9px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+.banner{background:color-mix(in srgb,var(--warn) 22%,var(--panel));padding:5px 16px;font-size:12px;border-bottom:1px solid var(--line)}
+main{flex:1;min-height:0;display:grid;grid-template-columns:290px 1fr 330px;gap:12px;padding:12px}
+section{background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:auto;padding:12px 14px;min-height:0}
+h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin:0 0 10px;font-weight:600}
+@media(max-width:960px){main{grid-template-columns:1fr}section{max-height:70vh}}
+.empty{color:var(--muted);font-size:13px}
+
+/* org chart */
+.node{display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:8px;margin:2px 0;transition:background .3s}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--line);flex:none}
+.node.working .dot,.node.meeting .dot{background:var(--ok);animation:pulse 1.3s infinite}
+.node.meeting .dot{background:var(--c)}
+.node.done .dot{background:var(--muted)}
+.node.blocked .dot{background:var(--bad)}
+.node.speaking{background:color-mix(in srgb,var(--c) 14%,transparent)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 0%,transparent),0 0 0 0 color-mix(in srgb,var(--ok) 55%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+.who{min-width:0}
+.who .name{font-weight:600;color:var(--c)}
+.who .meta{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:10px;padding:1px 6px;border-radius:4px;background:var(--line);margin-left:auto;flex:none;text-transform:lowercase}
+.children{margin-left:13px;border-left:1px dashed var(--line);padding-left:6px}
+.task{font-size:11px;color:var(--muted);margin:0 0 4px 26px}
+
+/* meetings */
+.tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.tabs button.on{border-color:var(--ink);font-weight:600}
+.tabs button .live-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--ok);margin-right:5px;animation:blink 1s infinite}
+.mhead{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.mhead h3{margin:0;font-size:15px}
+.rounds{font-size:12px;color:var(--muted)}
+.bar{height:4px;background:var(--line);border-radius:2px;margin:-4px 0 14px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink);transition:width .4s}
+.positions{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-bottom:14px}
+.card{border:1px solid var(--line);border-top:3px solid var(--c);border-radius:8px;padding:8px 10px;font-size:13px}
+.card .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+.round-h{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:14px 0 6px;display:flex;align-items:center;gap:8px}
+.round-h::after{content:"";flex:1;border-top:1px solid var(--line)}
+.msg{border-left:3px solid var(--c);padding:4px 0 4px 10px;margin:6px 0;animation:in .35s ease-out}
+.msg .from{font-weight:600;color:var(--c);font-size:12px}
+.msg.block{border-left-color:var(--bad);background:color-mix(in srgb,var(--bad) 9%,transparent);border-radius:0 6px 6px 0}
+.msg.block .from::after{content:" · BLOCK";color:var(--bad)}
+.msg.unblock{background:color-mix(in srgb,var(--ok) 9%,transparent);border-radius:0 6px 6px 0}
+.msg.unblock .from::after{content:" · BLOCK LIFTED";color:var(--ok)}
+.typing{display:inline-flex;gap:3px;padding:4px 0 4px 10px;border-left:3px solid var(--c);margin:6px 0;align-items:center;font-size:12px;color:var(--muted)}
+.typing i{width:5px;height:5px;border-radius:50%;background:var(--c);animation:bounce 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-3px);opacity:1}}
+@keyframes in{from{opacity:0;transform:translateY(4px)}}
+.decisions{margin-top:16px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;background:color-mix(in srgb,var(--ink) 3%,transparent)}
+.decisions h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.decisions ol{margin:0;padding-left:18px}
+.decisions .doc{font-size:11px;color:var(--muted);margin-top:6px;font-family:ui-monospace,Menlo,monospace}
+
+/* feed */
+.ev{display:grid;grid-template-columns:42px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px;animation:in .35s ease-out}
+.ev:last-child{border-bottom:0}
+.ev time{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
+.ev .sub{font-size:12px;color:var(--muted);margin-top:2px;white-space:pre-wrap}
+.ev.board{background:color-mix(in srgb,var(--warn) 14%,transparent);border-radius:6px;padding:6px;border-bottom:0;margin:2px 0}
+.ev.board .k{font-weight:600}
+.ev.bad .k{color:var(--bad)}
+.k{font-weight:500}
+.report{white-space:pre-wrap;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Boardroom</h1>
+  <span class="pill" id="status">idle</span>
+  <span class="pill" id="day"></span>
+  <button id="restart" hidden>Replay</button>
+  <div class="stats">
+    <span>working <b id="s-working">0</b></span>
+    <span>headcount <b id="s-head">0</b></span>
+    <span>turns used <b id="s-turns">0</b></span>
+    <span>awaiting board <b id="s-board">0</b></span>
+  </div>
+</header>
+<div class="banner" id="banner" hidden></div>
+<main>
+  <section><h2>Org chart</h2><div id="org"></div></section>
+  <section id="meetwrap"><h2>Meetings</h2><div class="tabs" id="tabs"></div><div id="meeting"></div></section>
+  <section><h2>Activity</h2><div id="feed"></div></section>
+</main>
+<script>
+const params = new URLSearchParams(location.search);
+const DAY = params.get('day');
+const DEMO = !DAY;
+const SRC = DEMO ? 'demo/events.jsonl' : `/org/days/${DAY}/events.jsonl`;
+const EXEC_COLORS = {ceo:'--ceo', cto:'--cto', cso:'--cso'};
+const STEP_MS = 1100;
+
+let all = [];        // every event loaded
+let shown = 0;       // how many are revealed (demo replays progressively)
+let picked = null;   // meeting tab the user clicked; null = follow latest
+let timer = null;
+
+const $ = id => document.getElementById(id);
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') n.className = v;
+    else if (k === 'style') n.style.cssText = v;
+    else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) n.append(k.nodeType ? k : String(k));
+  return n;
+}
+const hhmm = t => t ? new Date(t).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+
+function parse(text) {
+  return text.split('\n').filter(l => l.trim()).flatMap(l => {
+    try { return [JSON.parse(l)]; } catch { return []; }   // tolerate a half-written last line
+  });
+}
+
+// Fold events into the current state of the day.
+function build(events) {
+  const s = {agents:new Map(), meetings:new Map(), order:[], approvals:new Map(),
+             feed:[], turns:0, live:false, report:null};
+  for (const e of events) {
+    switch (e.type) {
+      case 'day_start': s.live = true; s.feed.push([e, 'Work-day started']); break;
+      case 'day_end': s.live = false; s.feed.push([e, 'Work-day ended']); break;
+      case 'hire':
+        s.agents.set(e.who, {...e, status:'idle', task:null});
+        if (e.reports_to !== 'board') s.feed.push([e, `Hired ${e.title || e.who}`, `${e.model} · ${e.max_turns} turns · reports to ${e.reports_to}`]);
+        break;
+      case 'meeting_start':
+        s.meetings.set(e.id, {...e, positions:[], msgs:[], live:true, decisions:null, round:0});
+        s.order.push(e.id);
+        s.feed.push([e, `${e.title} started`]);
+        break;
+      case 'position': { const m = s.meetings.get(e.meeting); if (m) m.positions.push(e); break; }
+      case 'say': case 'block': case 'unblock': {
+        const m = s.meetings.get(e.meeting); if (!m) break;
+        m.msgs.push(e); if (e.round) m.round = Math.max(m.round, e.round);
+        if (e.type === 'block') s.feed.push([e, `${up(e.who)} blocked`, e.text, 'bad']);
+        if (e.type === 'unblock') s.feed.push([e, `${up(e.who)} lifted the block`]);
+        break;
+      }
+      case 'meeting_end': {
+        const m = s.meetings.get(e.meeting); if (!m) break;
+        m.live = false; m.decisions = e.decisions || []; m.doc = e.doc;
+        s.feed.push([e, `${m.title} closed`, `${m.decisions.length} decisions`]);
+        break;
+      }
+      case 'agent_start': {
+        const a = s.agents.get(e.who); if (a) { a.status = 'working'; a.task = e.task; }
+        s.feed.push([e, `${label(s, e.who)} started work`, e.task]);
+        break;
+      }
+      case 'agent_end': {
+        const a = s.agents.get(e.who);
+        if (a) { a.status = e.status === 'blocked' ? 'blocked' : 'done'; a.task = e.summary || a.task; }
+        s.turns += e.turns || 0;
+        s.feed.push([e, `${label(s, e.who)} ${e.status === 'blocked' ? 'is blocked' : 'finished'}`,
+                     [e.turns ? `${e.turns} turns` : '', e.summary].filter(Boolean).join(' · '), e.status === 'blocked' ? 'bad' : '']);
+        break;
+      }
+      case 'approval_request':
+        s.approvals.set(e.id, {...e, answer:null});
+        s.feed.push([e, `Needs board: ${label(s, e.who)} asks`, e.text, 'board']);
+        break;
+      case 'approval_answer': {
+        const r = s.approvals.get(e.id); if (r) r.answer = e.answer;
+        s.feed.push([e, 'Board answered', e.answer]);
+        break;
+      }
+      case 'retro': s.feed.push([e, `${label(s, e.who)} filed a retro`, e.text]); break;
+      case 'board_report': s.report = e; s.feed.push([e, 'Board report ready', e.text, 'board']); break;
+    }
+  }
+  return s;
+}
+const up = w => w.toUpperCase();
+const label = (s, who) => s.agents.get(who)?.title || up(who);
+
+function rootOf(s, who) {
+  let cur = s.agents.get(who), guard = 0;
+  while (cur && cur.reports_to && cur.reports_to !== 'board' && guard++ < 10) cur = s.agents.get(cur.reports_to);
+  return cur?.who;
+}
+const colorOf = (s, who) => `var(${EXEC_COLORS[rootOf(s, who)] || '--board'})`;
+
+function render() {
+  const s = build(all.slice(0, shown));
+  const liveMeeting = s.order.map(id => s.meetings.get(id)).find(m => m.live);
+  const lastSpeaker = liveMeeting?.msgs.at(-1)?.who;
+
+  // header
+  const replaying = DEMO && shown < all.length;
+  const isLive = s.live || replaying;
+  $('status').textContent = isLive ? 'live' : (all.length ? 'day complete' : 'waiting for events');
+  $('status').className = 'pill' + (isLive ? ' live' : '');
+  $('day').textContent = DEMO ? 'sample day' : DAY;
+  $('restart').hidden = !DEMO || replaying;
+  const working = [...s.agents.values()].filter(a => a.status === 'working').length
+                + (liveMeeting ? [...s.agents.values()].filter(a => a.reports_to === 'board').length : 0);
+  $('s-working').textContent = working;
+  $('s-head').textContent = s.agents.size;
+  $('s-turns').textContent = s.turns;
+  $('s-board').textContent = [...s.approvals.values()].filter(a => !a.answer).length;
+
+  // org chart
+  const kids = {};
+  for (const a of s.agents.values()) (kids[a.reports_to] ||= []).push(a);
+  const tree = who => (kids[who] || []).map(a => {
+    let cls = a.status;
+    if (liveMeeting && a.reports_to === 'board') cls = 'meeting';
+    if (a.who === lastSpeaker && liveMeeting) cls += ' speaking';
+    const meta = cls.startsWith('meeting') ? `in ${liveMeeting.title}` : (a.status === 'working' ? 'working' : a.status);
+    return el('div', {},
+      el('div', {class:`node ${cls}`, style:`--c:${colorOf(s, a.who)}`},
+        el('span', {class:'dot'}),
+        el('div', {class:'who'}, el('div', {class:'name'}, a.title || up(a.who)), el('div', {class:'meta'}, meta)),
+        el('span', {class:'badge', title:`${a.max_turns ?? '?'} turns`}, a.model)),
+      a.task && a.status !== 'idle' ? el('div', {class:'task'}, a.task) : null,
+      kids[a.who] ? el('div', {class:'children'}, tree(a.who)) : null);
+  });
+  $('org').replaceChildren(...(s.agents.size ? tree('board') : [el('div', {class:'empty'}, 'No one hired yet.')]));
+
+  // meeting tabs
+  if (picked && !s.meetings.has(picked)) picked = null;
+  const current = picked || s.order.at(-1);
+  $('tabs').replaceChildren(...s.order.map(id => {
+    const m = s.meetings.get(id);
+    return el('button', {class: id === current ? 'on' : '', onclick: () => { picked = id === s.order.at(-1) ? null : id; render(); }},
+      m.live ? el('span', {class:'live-dot'}) : null, m.title);
+  }));
+
+  // meeting body
+  const m = s.meetings.get(current);
+  if (!m) { $('meeting').replaceChildren(el('div', {class:'empty'}, 'No meetings yet.')); }
+  else {
+    const body = [];
+    body.push(el('div', {class:'mhead'}, el('h3', {}, m.title),
+      el('span', {class:'rounds'}, m.live ? `round ${m.round || 0} of ${m.max_rounds}` : `closed after ${m.round} of ${m.max_rounds} rounds`)));
+    body.push(el('div', {class:'bar'}, el('i', {style:`width:${Math.min(100, 100 * (m.round || 0) / (m.max_rounds || 10))}%`})));
+    if (m.positions.length) {
+      body.push(el('div', {class:'round-h'}, 'Independent positions'));
+      body.push(el('div', {class:'positions'}, m.positions.map(p =>
+        el('div', {class:'card', style:`--c:${colorOf(s, p.who)}`}, el('div', {class:'lbl'}, label(s, p.who)), p.text))));
+    }
+    let r = null;
+    for (const x of m.msgs) {
+      if (x.round && x.round !== r) { r = x.round; body.push(el('div', {class:'round-h'}, `Round ${r}`)); }
+      body.push(el('div', {class:`msg ${x.type}`, style:`--c:${colorOf(s, x.who)}`},
+        el('div', {class:'from'}, label(s, x.who)), x.text));
+    }
+    if (m.live) {
+      const execs = [...s.agents.values()].filter(a => a.reports_to === 'board').map(a => a.who);
+      const order = m.msgs.length ? m.msgs : m.positions;
+      const next = execs[(execs.indexOf(order.at(-1)?.who) + 1) % execs.length] || execs[0];
+      if (next) body.push(el('div', {class:'typing', style:`--c:${colorOf(s, next)}`},
+        el('i'), el('i'), el('i'), el('span', {style:'margin-left:6px'}, `${label(s, next)} is thinking`)));
+    }
+    if (m.decisions) body.push(el('div', {class:'decisions'}, el('h4', {}, 'Decisions'),
+      m.decisions.length ? el('ol', {}, m.decisions.map(d => el('li', {}, d))) : el('div', {class:'empty'}, 'None.'),
+      m.doc ? el('div', {class:'doc'}, m.doc) : null));
+    const wrap = $('meetwrap');
+    const atBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 60;
+    $('meeting').replaceChildren(...body);
+    if (atBottom) wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  // feed (newest first)
+  const feed = s.feed.slice().reverse().map(([e, k, sub, kind]) =>
+    el('div', {class:`ev ${kind || ''}`}, el('time', {}, hhmm(e.t)),
+      el('div', {}, el('div', {class:'k'}, k), sub ? el('div', {class:'sub'}, sub) : null)));
+  $('feed').replaceChildren(...(feed.length ? feed : [el('div', {class:'empty'}, 'Nothing yet.')]));
+}
+
+async function load() {
+  try {
+    const res = await fetch(SRC, {cache:'no-store'});
+    if (!res.ok) throw new Error(res.status);
+    return parse(await res.text());
+  } catch (err) {
+    $('banner').hidden = false;
+    $('banner').textContent = `Can't read ${SRC} yet (${err.message}). Waiting for the work-day to start…`;
+    return null;
+  }
+}
+
+async function startDemo() {
+  $('banner').hidden = false;
+  $('banner').textContent = 'Sample replay: invented data showing what a work-day looks like, not a real day. Open ?day=YYYY-MM-DD for a real one.';
+  all = (await load()) || [];
+  shown = 0; picked = null;
+  clearInterval(timer);
+  timer = setInterval(() => { if (shown < all.length) { shown++; render(); } else clearInterval(timer); }, STEP_MS);
+  render();
+}
+
+async function poll() {
+  const ev = await load();
+  if (ev) { $('banner').hidden = true; all = ev; shown = ev.length; render(); }
+  setTimeout(poll, 2000);
+}
+
+$('restart').addEventListener('click', startDemo);
+render();
+DEMO ? startDemo() : poll();
+</script>
+</body>
+</html>
