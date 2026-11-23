@@ -135,7 +135,7 @@ Log `retro who=team text="<the Requests section>"` and an `agent_end` for each c
 
 ## 6. Evening meeting (`pm`, "Evening C-suite")
 
-Agenda: today's decision doc, the team retro, PRs opened today, and approvals asked and answered. Run the meeting as above. Then the CEO writes `DAY/board-report.md` from `SKILL/templates/board-report.md`. Fill in its cost table yourself from the `agent_end` events. Then render a readable copy beside it with `python3 SKILL/scripts/render_report.py DAY/board-report.md` (writes `DAY/board-report.html`; re-run it if the report changes). Log `board_report path=<path> text="<the summary section>"`.
+Agenda: today's decision doc, the team retro, PRs opened today, and approvals asked and answered. The execs work through the team retro: every request, and every point under "what got in the way", gets a response. It is either acted on (a decision with an owner), passed to the board (it goes into the board report as a decision needed or an org-change request), or declined with a reason. Run the meeting as above. The CEO's decision doc for `pm` adds a `## Team retro` table (point, raised by, response, owner) covering every point, so none is dropped silently. Then the CEO writes `DAY/board-report.md` from `SKILL/templates/board-report.md`. Fill in its cost table yourself from the `agent_end` events. Then render a readable copy beside it with `python3 SKILL/scripts/render_report.py DAY/board-report.md` (writes `DAY/board-report.html`; re-run it if the report changes). Log `board_report path=<path> text="<the summary section>"`.
 
 ## 7. Close
 
