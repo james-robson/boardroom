@@ -116,7 +116,8 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 const params = new URLSearchParams(location.search);
 const DAY = params.get('day');
 const DEMO = !DAY;
-const SRC = DEMO ? 'demo/events.jsonl' : `/org/days/${DAY}/events.jsonl`;
+// serve.py maps /days/ to <project>/.boardroom/days/
+const SRC = DEMO ? 'demo/events.jsonl' : `/days/${encodeURIComponent(DAY)}/events.jsonl`;
 const EXEC_COLORS = {ceo:'--ceo', cto:'--cto', cso:'--cso'};
 const STEP_MS = 1100;
 

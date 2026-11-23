@@ -1,0 +1,11 @@
+{
+  "name": "boardroom",
+  "owner": { "name": "Boardroom" },
+  "plugins": [
+    {
+      "name": "boardroom",
+      "source": "./",
+      "description": "Run a company of AI agents on your project, with you as the board."
+    }
+  ]
+}
