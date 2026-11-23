@@ -1,5 +1,5 @@
 {
   "name": "boardroom",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Run a company of AI agents on your project: a C-suite that meets in rounds, hires within limits, delegates work, and reports to you, the board."
 }
