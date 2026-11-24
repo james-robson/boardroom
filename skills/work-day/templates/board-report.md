@@ -8,7 +8,7 @@ Five lines at most.
 |---|---|---|
 
 ## Decisions needed
-For each: the question, the options, and the C-suite's recommendation (first) with the reason.
+For each: the question (saying in full what it refers to), the options, and the C-suite's recommendation (first) with the reason.
 
 1. **<question>**
    - Recommended: <option>, because...
@@ -16,6 +16,12 @@ For each: the question, the options, and the C-suite's recommendation (first) wi
 
 ## Org-change requests
 Anything beyond the standard limits (1 lead, 2 seniors per lead, 2 juniors per senior), new execs, or raises. Or "none".
+
+## Labels
+Every short label or id used anywhere in this report (setups, options, question ids such as `ceo-1`). Or "none".
+
+| Label | Full name | What it means | Status |
+|---|---|---|---|
 
 ## Cost
 | Agent | Model | Tool uses | Tokens | PRs opened |

@@ -22,4 +22,4 @@
 - <role>, reporting to <manager>, <model>: why
 
 ## Questions for the board
-- (or "none")
+- Each question says in full what it refers to; no bare labels. (Or "none".)
