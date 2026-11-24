@@ -93,6 +93,17 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .ev.board .k{font-weight:600}
 .ev.bad .k{color:var(--bad)}
 .k{font-weight:500}
+.col{display:flex;flex-direction:column;gap:12px;min-height:0}
+.col>section{flex:1 1 auto}
+#labelwrap{flex:0 1 auto;max-height:50%}
+@media(max-width:960px){#labelwrap{max-height:70vh}}
+.lab{padding:5px 6px;border-bottom:1px solid var(--line);font-size:13px;border-radius:6px;scroll-margin:8px}
+.lab:last-child{border-bottom:0}
+.lab:target{background:color-mix(in srgb,var(--warn) 22%,transparent)}
+.lab .id{font-weight:600;font-family:ui-monospace,Menlo,monospace;font-size:12px;margin-right:6px}
+.lab .sub{font-size:12px;color:var(--muted);margin-top:2px}
+.lab .badge{margin-left:6px}
+a.lref{color:inherit;text-decoration:underline dotted}
 .report{white-space:pre-wrap;font-size:13px;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:6px}
 </style>
 </head>
@@ -115,7 +126,10 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 </header>
 <div class="banner" id="banner" hidden></div>
 <main>
-  <section><h2>Org chart</h2><div id="org"></div></section>
+  <div class="col">
+    <section><h2>Org chart</h2><div id="org"></div></section>
+    <section id="labelwrap"><h2>Labels</h2><div id="labels"></div></section>
+  </div>
   <section id="meetwrap"><h2>Meetings</h2><div class="tabs" id="tabs"></div><div id="meeting"></div></section>
   <section><h2>Activity</h2><div id="feed"></div></section>
 </main>
@@ -185,7 +199,7 @@ function parse(text) {
 // Fold events into the current state of the day.
 function build(events) {
   const s = {agents:new Map(), meetings:new Map(), order:[], approvals:new Map(),
-             feed:[], turns:0, live:false, report:null, usage0:null, usage:null, wait:null};
+             labels:new Map(), feed:[], turns:0, live:false, report:null, usage0:null, usage:null, wait:null};
   for (const e of events) {
     switch (e.type) {
       case 'day_start': s.live = true; s.feed.push([e, 'Work-day started']); break;
@@ -232,13 +246,16 @@ function build(events) {
         s.feed.push([e, `Needs board: ${label(s, e.who)} asks`, e.text, 'board']);
         break;
       case 'approval_answer': {
-        const r = s.approvals.get(e.id); if (r) r.answer = e.answer;
-        s.feed.push([e, 'Board answered', e.answer]);
+        const ans = e.answer ?? e.text;   // skill logs have used both field names
+        const r = s.approvals.get(e.id); if (r) r.answer = ans;
+        s.feed.push([e, 'Board answered', ans]);
         break;
       }
       case 'board_directive': s.feed.push([e, `Board asks ${label(s, e.to)}`, e.text, 'board']); break;
       case 'directive_answer': s.feed.push([e, `${label(s, e.who)} answered the board`, e.text, 'board']); break;
       case 'retro': s.feed.push([e, `${label(s, e.who)} filed a retro`, e.text]); break;
+      // a label names an item in a labelled list (S3 = "Antigravity setup"); a later event with the same id updates it
+      case 'label': if (e.id) s.labels.set(e.id, {...s.labels.get(e.id), ...e}); break;
       case 'usage': s.usage0 ||= e; s.usage = e; break;
       case 'wait': s.wait = e; s.feed.push([e, `Waiting until ${e.until}`, e.reason]); break;
       case 'board_report': s.report = e; s.feed.push([e, 'Board report ready', e.text, 'board']); break;
@@ -248,6 +265,28 @@ function build(events) {
 }
 const up = w => w.toUpperCase();
 const label = (s, who) => s.agents.get(who)?.title || up(who);
+
+// Every id the board might see: logged labels plus board-question ids.
+function labelIds(s) {
+  const out = new Map();
+  for (const a of s.approvals.values()) out.set(a.id, a.text);
+  for (const l of s.labels.values()) out.set(l.id, l.name || out.get(l.id) || '');
+  return out;
+}
+// Turn known ids in text into links to their row in the Labels panel.
+function linkify(text, ids) {
+  if (!text || !ids.size) return text;
+  const esc = [...ids.keys()].sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const re = new RegExp(`(?<![\\w])(${esc.join('|')})(?![\\w])`, 'g');
+  const out = []; let last = 0;
+  for (const m of String(text).matchAll(re)) {
+    out.push(text.slice(last, m.index),
+      el('a', {class:'lref', href:`#label-${encodeURIComponent(m[1])}`, title:ids.get(m[1]) || ''}, m[1]));
+    last = m.index + m[1].length;
+  }
+  out.push(text.slice(last));
+  return out;
+}
 
 function rootOf(s, who) {
   let cur = s.agents.get(who), guard = 0;
@@ -260,6 +299,7 @@ function render() {
   const s = build(all.slice(0, shown));
   const liveMeeting = s.order.map(id => s.meetings.get(id)).find(m => m.live);
   const lastSpeaker = liveMeeting?.msgs.at(-1)?.who;
+  const ids = labelIds(s);
 
   // header
   const replaying = DEMO && shown < all.length;
@@ -318,13 +358,13 @@ function render() {
     if (m.positions.length) {
       body.push(el('div', {class:'round-h'}, 'Independent positions'));
       body.push(el('div', {class:'positions'}, m.positions.map(p =>
-        el('div', {class:'card', style:`--c:${colorOf(s, p.who)}`}, el('div', {class:'lbl'}, label(s, p.who)), p.text))));
+        el('div', {class:'card', style:`--c:${colorOf(s, p.who)}`}, el('div', {class:'lbl'}, label(s, p.who)), linkify(p.text, ids)))));
     }
     let r = null;
     for (const x of m.msgs) {
       if (x.round && x.round !== r) { r = x.round; body.push(el('div', {class:'round-h'}, `Round ${r}`)); }
       body.push(el('div', {class:`msg ${x.type}${x._i >= drawn ? ' new' : ''}`, style:`--c:${colorOf(s, x.who)}`},
-        el('div', {class:'from'}, label(s, x.who)), x.text));
+        el('div', {class:'from'}, label(s, x.who)), linkify(x.text, ids)));
     }
     if (m.live) {
       const execs = [...s.agents.values()].filter(a => a.reports_to === 'board').map(a => a.who);
@@ -334,7 +374,7 @@ function render() {
         el('i'), el('i'), el('i'), el('span', {style:'margin-left:6px'}, `${label(s, next)} is thinking`)));
     }
     if (m.decisions) body.push(el('div', {class:'decisions'}, el('h4', {}, 'Decisions'),
-      m.decisions.length ? el('ol', {}, m.decisions.map(d => el('li', {}, d))) : el('div', {class:'empty'}, 'None.'),
+      m.decisions.length ? el('ol', {}, m.decisions.map(d => el('li', {}, linkify(d, ids)))) : el('div', {class:'empty'}, 'None.'),
       m.doc ? el('div', {class:'doc'}, m.doc) : null));
     const wrap = $('meetwrap');
     const atBottom = wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight < 60;
@@ -342,10 +382,24 @@ function render() {
     if (atBottom) wrap.scrollTop = wrap.scrollHeight;
   }
 
+  // labels: logged labels first, then board questions that have no label of their own
+  const rows = [...s.labels.values()].map(l => {
+    const q = s.approvals.get(l.id);
+    return {id:l.id, name:l.name || q?.text, meaning:l.meaning, status:l.status || (q ? (q.answer ? 'answered' : 'awaiting board') : '')};
+  });
+  for (const q of s.approvals.values()) if (!s.labels.has(q.id))
+    rows.push({id:q.id, name:q.text, meaning:q.answer ? `Board: ${q.answer}` : `Asked by ${label(s, q.who)}`, status:q.answer ? 'answered' : 'awaiting board'});
+  $('labels').replaceChildren(...(rows.length ? rows.map(r =>
+    el('div', {class:'lab', id:`label-${r.id}`},
+      el('span', {class:'id'}, r.id), linkify(r.name || '', ids),
+      r.status ? el('span', {class:'badge'}, r.status) : null,
+      r.meaning ? el('div', {class:'sub'}, linkify(r.meaning, ids)) : null))
+    : [el('div', {class:'empty'}, 'No labels yet.')]));
+
   // feed (newest first)
   const feed = s.feed.slice().reverse().map(([e, k, sub, kind]) =>
     el('div', {class:`ev ${kind || ''}${e._i >= drawn ? ' new' : ''}`}, el('time', {}, hhmm(e.t)),
-      el('div', {}, el('div', {class:'k'}, k), sub ? el('div', {class:'sub'}, sub) : null)));
+      el('div', {}, el('div', {class:'k'}, k), sub ? el('div', {class:'sub'}, linkify(sub, ids)) : null)));
   $('feed').replaceChildren(...(feed.length ? feed : [el('div', {class:'empty'}, 'Nothing yet.')]));
   drawn = shown;   // items up to here have had their entrance animation
 }

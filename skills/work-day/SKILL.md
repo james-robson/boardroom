@@ -33,6 +33,8 @@ python3 SKILL/scripts/event.py DAY/events.jsonl <type> key=value key='["a","b"]'
 
 Values that parse as JSON (numbers, lists) are stored as such; everything else is a string. Quote values for the shell. The field names per type are in the event table of the Boardroom design doc and in the examples below. The viewer reads this file live, so log as you go, not at the end.
 
+**Labels.** When an agent introduces a labelled list the board will see (test setups S1–S5, options A/B), log one event per label: `label id=S3 name="Antigravity setup" meaning="..." status="..."`. When one changes, log `label` again with the same `id` and only the fields that changed. Board-question ids (`ceo-1`) appear in the viewer's Labels panel from their `approval_request` without a `label` event.
+
 ## 0. Prepare
 
 1. If `BR/board.md` is missing: copy `SKILL/templates/board.md` there, tell the board to fill it in, and **stop**. The board brief is the only source of project goals and constraints; never invent them.

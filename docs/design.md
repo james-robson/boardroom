@@ -112,7 +112,7 @@ Templates are in `skills/work-day/templates/`.
 
 ## Meeting viewer
 
-`viewer/index.html` shows a work-day live: the org chart with working indicators, meetings round by round with blocks highlighted, decisions, and an activity feed with requests waiting on the board. It polls `.boardroom/days/<day>/events.jsonl` every 2 seconds.
+`viewer/index.html` shows a work-day live: the org chart with working indicators, meetings round by round with blocks highlighted, decisions, and an activity feed with requests waiting on the board. A Labels panel lists every `label` and every board-question id, and those ids link to it wherever they appear. It polls `.boardroom/days/<day>/events.jsonl` every 2 seconds.
 
 ```bash
 python3 <boardroom>/viewer/serve.py <project dir>
@@ -133,13 +133,14 @@ Then open `http://127.0.0.1:8787/?day=YYYY-MM-DD`, or `http://127.0.0.1:8787/` f
 | `agent_start` | `who`, `task` |
 | `agent_end` | `who`, `status` (`done` / `blocked`), `turns`, `tokens`, `summary` |
 | `approval_request` | `id`, `who`, `text` |
-| `approval_answer` | `id`, `answer` |
+| `approval_answer` | `id`, `answer` (the viewer also reads `text`) |
 | `board_directive` | `id`, `to`, `text` (the board's words) |
 | `directive_answer` | `id`, `who`, `text` |
 | `retro` | `who`, `text` |
 | `board_report` | `path`, `text` |
 | `usage` | `five_hour`, `weekly` (percent of each plan limit used) |
 | `wait` | `until` (HH:MM), `reason` |
+| `label` | `id`, `name`, `meaning`, `status` (optional; a later event with the same `id` updates only the fields it gives) |
 
 ## How we'll know it's working
 
