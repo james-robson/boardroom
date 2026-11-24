@@ -93,6 +93,8 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 .ev.board .k{font-weight:600}
 .ev.bad .k{color:var(--bad)}
 .k{font-weight:500}
+.waitbar{display:flex;align-items:center;gap:10px;padding:6px 16px;font-size:12px;border-bottom:1px solid var(--line);background:var(--panel);flex-wrap:wrap}
+.waitbar .why{color:var(--muted)}
 .col{display:flex;flex-direction:column;gap:12px;min-height:0}
 .col>section{flex:1 1 auto}
 #labelwrap{flex:0 1 auto;max-height:50%}
@@ -125,6 +127,7 @@ a.lref{color:inherit;text-decoration:underline dotted}
   </div>
 </header>
 <div class="banner" id="banner" hidden></div>
+<div class="waitbar" id="waitbar" hidden><span id="wait-text"></span><button id="wake">Continue now</button></div>
 <main>
   <div class="col">
     <section><h2>Org chart</h2><div id="org"></div></section>
@@ -257,6 +260,7 @@ function build(events) {
       // a label names an item in a labelled list (S3 = "Antigravity setup"); a later event with the same id updates it
       case 'label': if (e.id) s.labels.set(e.id, {...s.labels.get(e.id), ...e}); break;
       case 'usage': s.usage0 ||= e; s.usage = e; break;
+      case 'wake': s.wait = null; s.feed.push([e, 'Board continued the day early', '', 'board']); break;
       case 'wait': s.wait = e; s.feed.push([e, `Waiting until ${e.until}`, e.reason]); break;
       case 'board_report': s.report = e; s.feed.push([e, 'Board report ready', e.text, 'board']); break;
     }
@@ -308,6 +312,12 @@ function render() {
   $('status').className = 'pill' + (isLive ? ' live' : '');
   $('day').textContent = DEMO ? 'sample day' : DAY;
   $('restart').hidden = !DEMO || replaying;
+  $('waitbar').hidden = DEMO || !(s.live && s.wait);
+  if (s.wait && $('wake').dataset.wait !== String(s.wait._i)) {   // a new wait: reset the button
+    Object.assign($('wake'), {disabled:false, textContent:'Continue now'}); $('wake').dataset.wait = s.wait._i;
+  }
+  if (!$('waitbar').hidden) $('wait-text').replaceChildren(el('b', {}, `Waiting until ${s.wait.until}`), ' ',
+    s.wait.reason ? el('span', {class:'why'}, linkify(s.wait.reason, labelIds(s))) : null);
   const rl = $('report-link');
   rl.hidden = DEMO || !s.report;
   if (!rl.hidden) rl.href = `days/${encodeURIComponent(DAY)}/board-report.html`;
@@ -442,6 +452,14 @@ async function poll() {
 }
 
 $('restart').addEventListener('click', startDemo);
+$('wake').addEventListener('click', async () => {
+  const b = $('wake'); b.disabled = true; b.textContent = 'Waking…';
+  try {
+    const res = await fetch(`/wake?day=${encodeURIComponent(DAY)}`, {method:'POST', headers:{'X-Boardroom':'wake'}});
+    if (!res.ok) throw new Error(res.status);
+    b.textContent = 'Woken; the secretary picks up within 15 s';
+  } catch (err) { b.disabled = false; b.textContent = `Continue now (failed: ${err.message})`; }
+});
 render();
 DEMO ? startDemo() : poll();
 </script>

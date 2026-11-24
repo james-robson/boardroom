@@ -140,6 +140,7 @@ Then open `http://127.0.0.1:8787/?day=YYYY-MM-DD`, or `http://127.0.0.1:8787/` f
 | `board_report` | `path`, `text` |
 | `usage` | `five_hour`, `weekly` (percent of each plan limit used) |
 | `wait` | `until` (HH:MM), `reason` |
+| `wake` | `who` (`board`). Written by `serve.py` when the board presses Continue now; ends the current wait early |
 | `label` | `id`, `name`, `meaning`, `status` (optional; a later event with the same `id` updates only the fields it gives) |
 
 ## How we'll know it's working

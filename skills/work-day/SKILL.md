@@ -68,10 +68,13 @@ Note in the board report that you did this. From the next session on, the files 
 
 **Waiting.** When the C-suite decides to wait, or the 5-hour limit is nearly full:
 1. Log `wait until=<HH:MM> reason="..."`.
-2. Start `sleep <seconds>` with Bash `run_in_background`: an hour, or until the 5-hour reset if that's sooner and is the reason.
-3. Tell the board in one line what you're waiting on and when you'll check back, and end your turn.
+2. Start this with Bash `run_in_background`, with `<seconds>` set to an hour, or until the 5-hour reset if that's sooner and is the reason. It ends when the time is up or the board presses **Continue now** in the viewer (which logs a `wake` event):
+   ```bash
+   f=DAY/events.jsonl; n=$(wc -l < "$f"); end=$(( $(date +%s) + <seconds> )); until [ "$(date +%s)" -ge "$end" ] || tail -n +"$((n + 1))" "$f" | grep -q '"type": "wake"'; do sleep 15; done
+   ```
+3. Tell the board in one line what you're waiting on and when you'll check back, and that **Continue now** in the viewer ends the wait early. End your turn.
 
-You're woken when the sleep ends or when the board sends a message. Either way, go to the next check-in.
+You're woken when the wait ends (time up or a `wake` event) or when the board sends a message. Either way, go to the next check-in. A `wake` is the board's own action, like a message: it asks you to check in now, nothing more.
 
 ## Board questions
 
