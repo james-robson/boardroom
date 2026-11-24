@@ -32,7 +32,10 @@ Values that parse as JSON (numbers, lists) are stored as such; everything else i
 
 1. If `BR/board.md` is missing: copy `SKILL/templates/board.md` there, tell the board to fill it in, and **stop**. The board brief is the only source of project goals and constraints; never invent them.
 2. Create `BR/approvals.md` and `BR/org.md` from their templates if missing.
-3. For each exec in `ceo`, `cto`, `cso`: if `PROJECT/.claude/agents/<exec>.md` is missing, copy `SKILL/templates/agents/<exec>.md` there and add the exec to `org.md`.
+3. Run `python3 SKILL/scripts/sync_agents.py PROJECT`.
+   - It creates any missing exec files (`ceo`, `cto`, `cso`) and refreshes the Boardroom-managed core block in every staff file, so staff always run on this version's role definitions.
+   - It never touches frontmatter (pay grade, salary) or the project sections below the core block.
+   - Add any exec it created to `org.md`. If it lists files as skipped, tell the board: those files have no core block and won't get framework updates.
 4. Create `DAY/` and `DAY/briefs/`. Log `day_start`.
 5. Log a `hire` event for every member of `org.md` (execs have `reports_to=board`), so the viewer shows the full org.
 6. Tell the board how to watch:
@@ -96,7 +99,7 @@ Limits, unless `approvals.md` records a board-approved extension:
 - each senior: up to 2 juniors
 
 For each hire the morning meeting decided:
-- **Within limits:** write `PROJECT/.claude/agents/<role>.md` from `SKILL/templates/agents/hire.md`.
+- **Within limits:** write `PROJECT/.claude/agents/<role>.md` from `SKILL/templates/agents/hire.md`, filling in the frontmatter and the sections below the core block, then run `python3 SKILL/scripts/sync_agents.py PROJECT` to fill the core block.
   - `model`: opus for a lead, sonnet for a senior, haiku or sonnet for a junior (as decided).
   - `maxTurns`: 40 for a lead, 30 for a senior, 20 for a junior, or the raise recorded in `approvals.md`.
   - The role description comes from the decision doc.
@@ -108,7 +111,7 @@ For each hire the morning meeting decided:
 
 Spawn every lead that has a brief, **in parallel, in one message**, with `isolation: "worktree"`. Before each spawn, log `agent_start who=<lead> task="<brief objective>"`. Each lead's prompt contains:
 - the absolute paths of its brief, `board.md`, `org.md` and `DAY`
-- the rules from `SKILL/templates/lead-rules.md`, with the paths filled in
+- the rules from `SKILL/templates/lead-rules.md`, with the paths filled in (`SYNC` is `SKILL/scripts/sync_agents.py`)
 
 When a lead returns, log `agent_end who=<lead> status=done|blocked turns=<tool uses> tokens=<total tokens> summary="..."`, taking the numbers from the Agent result's usage.
 

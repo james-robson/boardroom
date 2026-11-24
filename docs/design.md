@@ -47,6 +47,8 @@ docs/
   agent-memory/<role>/    # native per-agent memory
 ```
 
+**Staff files have two parts.** A core block between `<!-- boardroom:core:<name> -->` markers holds the framework's role definition (from `templates/agents/core/`). Everything else belongs to the company: the frontmatter (pay grade and salary), project notes and remit. At the start of every work-day, `scripts/sync_agents.py` replaces each core block with the current version and leaves the rest alone. Updating the plugin therefore updates every company's staff the next time it works.
+
 Project-specific instructions (the goal, what data exists, what the agents must never touch) go in the project's `.boardroom/board.md`. The framework only reads that file, so it never mentions any particular project.
 
 ## Org
