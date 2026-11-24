@@ -24,7 +24,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if urlsplit(self.path).path == "/days.json":
             days = sorted((d.name for d in DAYS.iterdir()
-                           if re.fullmatch(r"\d{4}-\d{2}-\d{2}", d.name) and (d / "events.jsonl").exists()),
+                           if re.fullmatch(r"\d{4}-\d{2}-\d{2}(-\d+)?", d.name) and (d / "events.jsonl").exists()),
                           reverse=True) if DAYS.is_dir() else []
             body = json.dumps(days).encode()
             self.send_response(200)

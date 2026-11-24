@@ -2,11 +2,11 @@
 
 Run a company of AI agents on your project, inside Claude Code. You are **the board**.
 
-Each work-day:
+A work-day is a real day. Start it in the morning and leave the session open. It ends at 17:00 or when the daily budget in `board.md` is spent.
 1. A C-suite (CEO, CTO, CSO) meets in a limited number of rounds and decides the plan.
 2. They hire within fixed limits. The model is the pay grade and the turn budget is the salary.
-3. Leads do the work on branches, delegating to seniors and juniors.
-4. The leads write retros, the C-suite meets again, and you get a board report with the decisions you need to make.
+3. Leads do the work on branches, delegating to seniors and juniors. The C-suite checks in after each round of work and either briefs the next piece or waits. Questions for you come up in chat during the day; answer them when you can, and the work carries on meanwhile.
+4. The team writes a retro, the C-suite meets again, and you get a board report with the decisions you need to make.
 
 Agents propose and build. You approve anything that ships, spends money, goes public or grows the org beyond its limits.
 

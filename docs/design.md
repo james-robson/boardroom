@@ -82,7 +82,9 @@ Day 1 starts at the bottom of the limits. The limits are ceilings, not targets (
 
 The skill runs in the main session as the **secretary**. It spawns every agent, keeps the record and is the only one who talks to the board, but it makes no company decisions itself.
 
-1. **Prepare.** Check that `.boardroom/board.md` exists; if not, create it from the template and stop so the board can fill it in. Create the other state files and the execs if missing. Read yesterday's board report and the board's answers.
+**One work-day is one real day.** The session stays open. After the morning meeting the company loops through work and check-ins until 17:00 local time or until the daily budget is spent. The budget is a share of the plan's weekly limit, 20% unless `board.md` says otherwise, read live from the app's usage data. The reason: a day of agent work takes about 20 minutes, but the evidence the company needs (users, replies, the board's answers) arrives on calendar time. Running days back to back gets ahead of the evidence and leaves execs with nothing real to do.
+
+1. **Prepare.** If today's folder exists, the board chooses to continue it or restart as `<date>-2` (then `-3`…), so reports never collide. Check that `.boardroom/board.md` exists; if not, create it from the template and stop so the board can fill it in. Create the other state files and the execs if missing. Read yesterday's board report and the board's answers.
 2. **Morning C-suite meeting.** Independent positions first (written in parallel, without seeing each other), then up to **10 rounds**.
    - Each round the CEO and CTO reply in parallel, then the CSO replies having seen their replies, so it never blocks a proposal that's already been dropped. A reply is one contribution, `PASS`, a `BLOCK:` or `LIFT:` from the CSO, or `CLOSE:` from the CEO.
    - The meeting ends on CLOSE with no active block, a round of all PASS, or after round 10.
@@ -92,8 +94,9 @@ The skill runs in the main session as the **secretary**. It spawns every agent, 
    - Leads may delegate to and hire their own seniors and juniors, and log those events themselves.
    - Monitoring means verifying (tests, evidence), not reading over shoulders.
    - Leads never merge.
-5. **Mid-day approvals.** A lead that needs board approval stops and says so. The secretary asks the board and records the answer, and the lead resumes once if approved.
-6. **Retros.** Each lead writes one retro.
+5. **Check-ins (the loop).** When a cycle's leads have returned, the C-suite holds a check-in of at most 3 rounds with no positions step. It looks at the results, the board's answers and the time and budget left. It then either briefs the next piece of work (back to step 3) or waits, re-checking in about an hour or when the board sends a message. At 17:00 or when the budget is spent, the loop ends.
+   - **Board questions don't stop the day.** A lead that needs approval stops and says so. The secretary posts the question in chat, records it in `pending.md`, and work that doesn't depend on it carries on. The board answers whenever it likes, and the next check-in acts on the answer.
+6. **Team retro.** Everyone below the C-suite who worked today writes one retro together.
 7. **Evening C-suite meeting.** Same format. The CEO writes the board report.
 **At any point,** the board can send a directive to a named exec. The secretary logs it, has the exec answer between steps, and brings the answer straight to the board.
 
@@ -135,12 +138,15 @@ Then open `http://127.0.0.1:8787/?day=YYYY-MM-DD`, or `http://127.0.0.1:8787/` f
 | `directive_answer` | `id`, `who`, `text` |
 | `retro` | `who`, `text` |
 | `board_report` | `path`, `text` |
+| `usage` | `five_hour`, `weekly` (percent of each plan limit used) |
+| `wait` | `until` (HH:MM), `reason` |
 
 ## How we'll know it's working
 
 - **PRs merged without changes per day.** This is the main output signal.
 - **Tokens and tool uses per merged PR, per agent.** Each layer has to earn its place.
 - **Board decisions raised vs. answered vs. overturned.** This tells us whether the approval gates sit in the right places.
+- **Per real-time day:** cycles run, waits and their reasons, board questions with time from asked to answered, and weekly-limit percentage used (from `usage`, `wait`, `meeting_start` and `approval_*` events). If most check-ins end in a wait, the company is waiting on evidence, not on engineering, and the CSO's research should be driving the briefs.
 
 All of this comes from git and the GitHub API, `events.jsonl` and `approvals.md`. After about 5 work-days we'll know whether the C-suite layer pays for itself. If merged output is near zero, we cut layers before adding any.
 
@@ -149,4 +155,5 @@ All of this comes from git and the GitHub API, `events.jsonl` and `approvals.md`
 - **Hooks that log subagents automatically.** Leads log their own reports' events instead.
 - **Picking the latest day automatically in the viewer.** For now the URL takes `?day=`.
 - **Committing a day's `.boardroom/` files in the target repo.** The board decides that.
-- **Running more than one work-day per date.**
+- **Running two work-days at once.** A restart makes a new run of the date (`<date>-2`, `-3`); runs never overlap.
+- **Running a day without the desktop app's usage data.** In the plain CLI the budget can't be read, so the day runs on the clock alone.

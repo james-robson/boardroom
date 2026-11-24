@@ -110,6 +110,7 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
     <span>headcount <b id="s-head">0</b></span>
     <span>turns used <b id="s-turns">0</b></span>
     <span>awaiting board <b id="s-board">0</b></span>
+    <span id="s-usage-wrap" hidden title="Plan usage from the last reading: weekly limit used since the day started, and the 5-hour window">usage <b id="s-usage"></b></span>
   </div>
 </header>
 <div class="banner" id="banner" hidden></div>
@@ -131,7 +132,7 @@ const DEMO = !DAY;
     // older serve.py: read the /days/ folder listing instead
     try {
       const page = await (await fetch('/days/', {cache: 'no-store'})).text();
-      days = [...new Set([...page.matchAll(/href="(\d{4}-\d{2}-\d{2})\/"/g)].map(m => m[1]))].sort().reverse();
+      days = [...new Set([...page.matchAll(/href="(\d{4}-\d{2}-\d{2}(?:-\d+)?)\/"/g)].map(m => m[1]))].sort().reverse();
     } catch { return; }
   }
   if (!days.length) return;
@@ -139,13 +140,14 @@ const DEMO = !DAY;
   const now = new Date(), iso = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const todayDay = iso(now);
   const go = d => { location.search = d ? `?day=${encodeURIComponent(d)}` : ''; };
-  pick.append(...(DEMO ? [el('option', {value: ''}, 'sample day')] : []), ...days.map(d => el('option', {value: d}, d === todayDay ? `${d} (today)` : d)));
+  pick.append(...(DEMO ? [el('option', {value: ''}, 'sample day')] : []), ...days.map(d => el('option', {value: d}, d.startsWith(todayDay) ? `${d} (today)` : d)));
   pick.value = DEMO ? '' : DAY;
   pick.onchange = () => go(pick.value);
   pick.hidden = false; $('day').hidden = true;
-  const target = days.includes(todayDay) ? todayDay : days[0];
-  today.textContent = days.includes(todayDay) ? 'Today' : 'Latest';
-  today.title = days.includes(todayDay) ? todayDay : `No work-day today; latest is ${days[0]}`;
+  const todayRun = days.find(d => d.startsWith(todayDay));   // latest run today (restarts are <date>-2, -3…)
+  const target = todayRun || days[0];
+  today.textContent = todayRun ? 'Today' : 'Latest';
+  today.title = todayRun || `No work-day today; latest is ${days[0]}`;
   today.hidden = DAY === target;
   today.onclick = () => go(target);
 })();
@@ -183,7 +185,7 @@ function parse(text) {
 // Fold events into the current state of the day.
 function build(events) {
   const s = {agents:new Map(), meetings:new Map(), order:[], approvals:new Map(),
-             feed:[], turns:0, live:false, report:null};
+             feed:[], turns:0, live:false, report:null, usage0:null, usage:null, wait:null};
   for (const e of events) {
     switch (e.type) {
       case 'day_start': s.live = true; s.feed.push([e, 'Work-day started']); break;
@@ -193,6 +195,7 @@ function build(events) {
         if (e.reports_to !== 'board') s.feed.push([e, `Hired ${e.title || e.who}`, `${e.model} · ${e.max_turns} turns · reports to ${e.reports_to}`]);
         break;
       case 'meeting_start':
+        s.wait = null;
         s.meetings.set(e.id, {...e, positions:[], msgs:[], live:true, decisions:null, round:0});
         s.order.push(e.id);
         s.feed.push([e, `${e.title} started`]);
@@ -236,6 +239,8 @@ function build(events) {
       case 'board_directive': s.feed.push([e, `Board asks ${label(s, e.to)}`, e.text, 'board']); break;
       case 'directive_answer': s.feed.push([e, `${label(s, e.who)} answered the board`, e.text, 'board']); break;
       case 'retro': s.feed.push([e, `${label(s, e.who)} filed a retro`, e.text]); break;
+      case 'usage': s.usage0 ||= e; s.usage = e; break;
+      case 'wait': s.wait = e; s.feed.push([e, `Waiting until ${e.until}`, e.reason]); break;
       case 'board_report': s.report = e; s.feed.push([e, 'Board report ready', e.text, 'board']); break;
     }
   }
@@ -259,7 +264,7 @@ function render() {
   // header
   const replaying = DEMO && shown < all.length;
   const isLive = s.live || replaying;
-  $('status').textContent = isLive ? 'live' : (all.length ? 'day complete' : 'waiting for events');
+  $('status').textContent = s.live && s.wait ? `waiting until ${s.wait.until}` : isLive ? 'live' : (all.length ? 'day complete' : 'waiting for events');
   $('status').className = 'pill' + (isLive ? ' live' : '');
   $('day').textContent = DEMO ? 'sample day' : DAY;
   $('restart').hidden = !DEMO || replaying;
@@ -272,6 +277,8 @@ function render() {
   $('s-head').textContent = s.agents.size;
   $('s-turns').textContent = s.turns;
   $('s-board').textContent = [...s.approvals.values()].filter(a => !a.answer).length;
+  $('s-usage-wrap').hidden = !s.usage;
+  if (s.usage) $('s-usage').textContent = `+${Math.max(0, s.usage.weekly - s.usage0.weekly)}% weekly today · 5h ${s.usage.five_hour}%`;
 
   // org chart
   const kids = {};
