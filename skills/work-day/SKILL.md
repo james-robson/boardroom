@@ -147,7 +147,7 @@ For each hire the morning meeting or a check-in decided:
 ## 3. Work
 
 Spawn every lead that has a brief this cycle, **in parallel, in one message**, with `isolation: "worktree"`. Before each spawn, log `agent_start who=<lead> task="<brief objective>"`. Each lead's prompt contains:
-- the absolute paths of its brief, `board.md`, `org.md` and `DAY`, and the cycle number
+- the absolute paths of its brief, `board.md`, `org.md` and `DAY`, and the cycle number. `DAY` is writable: the lead saves its outputs there directly, so you don't copy files over from its branch.
 - the rules from `SKILL/templates/lead-rules.md`, with the paths filled in (`SYNC` is `SKILL/scripts/sync_agents.py`)
 
 When a lead returns, log `agent_end who=<lead> status=done|blocked turns=<tool uses> tokens=<total tokens> summary="..."`, taking the numbers from the Agent result's usage. Any `NEEDS APPROVAL:` line becomes a board question (above).
