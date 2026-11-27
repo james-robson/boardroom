@@ -1,6 +1,8 @@
-# Boardroom
 
+# Boardroom
 Run a company of AI agents on your project, inside Claude Code. You are **the board**.
+
+<img width="1275" height="908" alt="Screenshot 2026-11-24 at 08 39 32" src="https://github.com/user-attachments/assets/c22fc2b3-56f6-412c-915f-e09800da5dce" />
 
 A work-day is a real day. Start it in the morning and leave the session open. It ends at 17:00 or when the daily budget in `board.md` is spent.
 1. A C-suite (CEO, CTO, CSO) meets in a limited number of rounds and decides the plan.
